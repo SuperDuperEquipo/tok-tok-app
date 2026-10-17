@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:toktok/config/theme/app_theme.dart';
 import 'package:toktok/firebase_options.dart';
 import 'package:toktok/presentation/providers/discover_provider.dart';
-import 'package:toktok/presentation/screens/auth/login_screen.dart';
+import 'package:toktok/presentation/screens/auth/auth_gate.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -30,7 +30,7 @@ class MyApp extends StatelessWidget {
         title: 'Tok Tok',
         debugShowCheckedModeBanner: false,
         theme: AppTheme().getTheme(),
-        home: const LoginScreen(),
+        home: const AuthGate(),
       ),
     );
   }

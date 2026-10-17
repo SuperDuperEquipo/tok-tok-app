@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:toktok/config/theme/app_colors.dart';
-import 'package:toktok/presentation/screens/discover/discover_screen.dart';
+import 'package:toktok/infrastructure/datasources/auth_service.dart';
 import 'package:toktok/presentation/widgets/auth/auth_background.dart';
 import 'package:toktok/presentation/widgets/auth/auth_text_field.dart';
 import 'package:toktok/presentation/widgets/auth/gradient_button.dart';
@@ -18,6 +18,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _emailCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
   final _confirmCtrl = TextEditingController();
+  final _auth = AuthService();
+  bool _loading = false;
 
   @override
   void dispose() {
@@ -28,13 +30,26 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
-  void _onRegister() {
+  Future<void> _onRegister() async {
     if (!_formKey.currentState!.validate()) return;
 
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => const DiscoverScreen()),
-      (route) => false,
-    );
+    setState(() => _loading = true);
+    try {
+      await _auth.register(
+        username: _userCtrl.text,
+        email: _emailCtrl.text,
+        password: _passCtrl.text,
+      );
+      if (!mounted) return;
+      
+      Navigator.of(context).popUntil((route) => route.isFirst);
+    } on AuthException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(e.message)));
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
   }
 
   @override
@@ -136,6 +151,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         const SizedBox(height: 24),
                         GradientButton(
                           label: 'Crear cuenta',
+                          loading: _loading,
                           onPressed: _onRegister,
                         ),
                         const SizedBox(height: 24),

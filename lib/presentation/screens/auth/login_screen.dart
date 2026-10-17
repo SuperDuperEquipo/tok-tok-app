@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:toktok/config/theme/app_colors.dart';
 import 'package:toktok/presentation/screens/auth/register_screen.dart';
-import 'package:toktok/presentation/screens/discover/discover_screen.dart';
+import 'package:toktok/infrastructure/datasources/auth_service.dart';
 import 'package:toktok/presentation/widgets/auth/auth_background.dart';
 import 'package:toktok/presentation/widgets/auth/auth_text_field.dart';
 import 'package:toktok/presentation/widgets/auth/gradient_button.dart';
@@ -17,6 +17,8 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
+  final _auth = AuthService();
+  bool _loading = false;
 
   @override
   void dispose() {
@@ -25,12 +27,19 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  void _onLogin() {
+    Future<void> _onLogin() async {
     if (!_formKey.currentState!.validate()) return;
 
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const DiscoverScreen()),
-    );
+    setState(() => _loading = true);
+    try {
+      await _auth.login(email: _emailCtrl.text, password: _passCtrl.text);
+    } on AuthException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(e.message)));
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
   }
 
   @override
@@ -110,6 +119,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         const SizedBox(height: 8),
                         GradientButton(
                           label: 'Iniciar sesión',
+                          loading: _loading,
                           onPressed: _onLogin,
                         ),
                         const SizedBox(height: 20),

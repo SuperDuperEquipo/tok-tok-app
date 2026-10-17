@@ -13,8 +13,6 @@ class DiscoverScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final discoverProvider = context.watch<DiscoverProvider>();
-
-    // El feed usa tema oscuro (texto blanco sobre los videos).
     final darkBase = ThemeData(useMaterial3: true, brightness: Brightness.dark);
     final darkTheme = darkBase.copyWith(
       textTheme: GoogleFonts.plusJakartaSansTextTheme(darkBase.textTheme),
@@ -26,11 +24,7 @@ class DiscoverScreen extends StatelessWidget {
         backgroundColor: Colors.black,
         body: Stack(
           children: [
-            discoverProvider.initialLoading
-                ? const Center(
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : VideoScrollableView(videos: discoverProvider.videos),
+            _buildFeed(discoverProvider),
 
             SafeArea(
               child: Align(
@@ -50,5 +44,26 @@ class DiscoverScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Widget _buildFeed(DiscoverProvider provider) {
+    if (provider.initialLoading) {
+      return const Center(child: CircularProgressIndicator(strokeWidth: 2));
+    }
+    if (provider.error != null) {
+      return Center(child: Text(provider.error!));
+    }
+    if (provider.videos.isEmpty) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(32),
+          child: Text(
+            'Aún no hay publicaciones.\nToca + para subir la primera.',
+            textAlign: TextAlign.center,
+          ),
+        ),
+      );
+    }
+    return VideoScrollableView(videos: provider.videos);
   }
 }

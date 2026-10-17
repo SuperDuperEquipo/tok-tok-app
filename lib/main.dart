@@ -1,9 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:toktok/config/theme/app_theme.dart';
 import 'package:toktok/firebase_options.dart';
-import 'package:toktok/presentation/providers/discover_provider.dart';
 import 'package:toktok/presentation/screens/auth/auth_gate.dart';
 
 Future<void> main() async {
@@ -19,19 +17,11 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [
-        ChangeNotifierProvider(
-          lazy: false,
-          create: (_) => DiscoverProvider()..loadNextPage(),
-        ),
-      ],
-      child: MaterialApp(
-        title: 'Tok Tok',
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme().getTheme(),
-        home: const AuthGate(),
-      ),
+    return MaterialApp(
+      title: 'Tok Tok',
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme().getTheme(),
+      home: const AuthGate(),
     );
   }
 }

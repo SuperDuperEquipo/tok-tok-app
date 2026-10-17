@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "378662717508",
+    "project_id": "tok-tok-app-8c16f",
+    "storage_bucket": "tok-tok-app-8c16f.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:378662717508:android:eb7175ae57cd5d8e801411",
+        "android_client_info": {
+          "package_name": "com.example.toktik"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD--yHbcZlw87mJarQ9xsq1J5VAPwI-A1g"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

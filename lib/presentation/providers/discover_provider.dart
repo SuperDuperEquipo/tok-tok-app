@@ -1,31 +1,38 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:toktok/domain/entities/video_post.dart';
-import 'package:toktok/infrastructure/models/local_video_model.dart';
-
-import 'package:toktok/shared/data/local_video_posts.dart';
-
-
+import 'package:toktok/infrastructure/datasources/posts_service.dart';
 
 class DiscoverProvider extends ChangeNotifier {
-
-  // TODO: Repository, DataSource
+  final PostsService _service = PostsService();
+  StreamSubscription<List<VideoPost>>? _sub;
 
   bool initialLoading = true;
+  String? error;
   List<VideoPost> videos = [];
 
-
-  Future<void> loadNextPage() async {
-
-    // await Future.delayed( const Duration(seconds: 2) );
-
-    final List<VideoPost> newVideos = videoPosts.map( 
-      ( video ) => LocalVideoModel.fromJson(video).toVideoPostEntity()
-    ).toList();
-    
-    videos.addAll( newVideos );
-    initialLoading = false;
-    notifyListeners();
+  /// Escucha los posts de Firestore en tiempo real
+  void listenPosts() {
+    _sub?.cancel();
+    _sub = _service.watchPosts().listen(
+      (posts) {
+        videos = posts;
+        initialLoading = false;
+        error = null;
+        notifyListeners();
+      },
+      onError: (_) {
+        error = 'No se pudieron cargar las publicaciones';
+        initialLoading = false;
+        notifyListeners();
+      },
+    );
   }
 
-
+  @override
+  void dispose() {
+    _sub?.cancel();
+    super.dispose();
+  }
 }

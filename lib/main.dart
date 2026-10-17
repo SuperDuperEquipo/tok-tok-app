@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:toktok/config/theme/app_theme.dart';
 import 'package:toktok/presentation/providers/discover_provider.dart';
-import 'package:toktok/presentation/screens/discover/discover_screen.dart';
+import 'package:toktok/presentation/screens/auth/login_screen.dart';
 
 void main() => runApp(const MyApp());
 
@@ -22,7 +22,7 @@ class MyApp extends StatelessWidget {
         title: 'Pulse',
         debugShowCheckedModeBanner: false,
         theme: AppTheme().getTheme(),
-        home: const DiscoverScreen()
+        home: const LoginScreen()
       ),
     );
   }

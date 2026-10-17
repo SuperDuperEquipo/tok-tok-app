@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:toktok/config/theme/app_colors.dart';
+import 'package:toktok/presentation/screens/auth/register_screen.dart';
 import 'package:toktok/presentation/screens/discover/discover_screen.dart';
+import 'package:toktok/presentation/widgets/auth/auth_background.dart';
 import 'package:toktok/presentation/widgets/auth/auth_text_field.dart';
 import 'package:toktok/presentation/widgets/auth/gradient_button.dart';
 
@@ -26,7 +28,6 @@ class _LoginScreenState extends State<LoginScreen> {
   void _onLogin() {
     if (!_formKey.currentState!.validate()) return;
 
-    
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(builder: (_) => const DiscoverScreen()),
     );
@@ -37,7 +38,7 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       body: Stack(
         children: [
-          const _SoftBackground(),
+          const AuthBackground(),
           SafeArea(
             child: Center(
               child: SingleChildScrollView(
@@ -49,8 +50,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const _Logo(),
-                        const SizedBox(height: 20),
                         Text(
                           'Tok Tok',
                           style: Theme.of(context)
@@ -126,7 +125,11 @@ class _LoginScreenState extends State<LoginScreen> {
                               style: TextStyle(color: AppColors.textSecondary),
                             ),
                             GestureDetector(
-                              onTap: () {}, // Registro: commit 3
+                              onTap: () => Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => const RegisterScreen(),
+                                ),
+                              ),
                               child: const Text(
                                 'Regístrate',
                                 style: TextStyle(
@@ -145,49 +148,6 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _Logo extends StatelessWidget {
-  const _Logo();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 96,
-      height: 96,
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.6),
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: Colors.white),
-        boxShadow: AppColors.brandGlow,
-      ),
-      child: Center(
-        child: Container(
-          width: 64,
-          height: 64,
-          decoration: BoxDecoration(
-            gradient: AppColors.brandGradient,
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Center(
-            child: Container(
-              width: 38,
-              height: 38,
-              decoration: const BoxDecoration(
-                color: Color(0xFF1A1020),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.play_arrow_rounded,
-                color: AppColors.magenta,
-                size: 26,
-              ),
-            ),
-          ),
-        ),
       ),
     );
   }
@@ -260,35 +220,4 @@ class _GoogleButton extends StatelessWidget {
       ),
     );
   }
-}
-
-class _SoftBackground extends StatelessWidget {
-  const _SoftBackground();
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        Positioned(
-          top: -120,
-          left: -120,
-          child: _glow(AppColors.magenta.withValues(alpha: 0.18), 360),
-        ),
-        Positioned(
-          bottom: -140,
-          right: -140,
-          child: _glow(AppColors.orange.withValues(alpha: 0.16), 380),
-        ),
-      ],
-    );
-  }
-
-  Widget _glow(Color color, double size) => Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: RadialGradient(colors: [color, color.withValues(alpha: 0)]),
-        ),
-      );
 }

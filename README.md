@@ -1,6 +1,6 @@
 # Tok Tok -  Flutter Project
 
-## Usario para probar el proyecto
+## Usuario para probar el proyecto
 Credenciales de prueba
 ```
 correo: prueba@gmail.com

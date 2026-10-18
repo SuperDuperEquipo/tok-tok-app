@@ -7,7 +7,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 
-/// Carga un PNG de assets y lo convierte en una imagen que Canvas puede dibujar.
 Future<ui.Image> loadFilterAsset(String assetPath) async {
   final ByteData data = await rootBundle.load(assetPath);
 
@@ -24,23 +23,16 @@ Future<ui.Image> loadFilterAsset(String assetPath) async {
   return frame.image;
 }
 
-/// Dibuja los filtros sobre cada rostro detectado.
-///
-/// Si uno de los filtros es null, no se dibuja.
 void paintFaceFilters({
   required Canvas canvas,
   required Face face,
   required ui.Image? skull,
   required ui.Image? santaHat,
+  double santaHatScale = 1.9,
 }) {
   final Rect faceRect = face.boundingBox;
+  final double angle = (face.headEulerAngleZ ?? 0) * math.pi / 180;
 
-  final double angle =
-      (face.headEulerAngleZ ?? 0) * math.pi / 180;
-
-  // Filtro 1: calavera de Halloween.
-  // Un poco más grande y más arriba para cubrir mejor la frente
-  // y conservar visibles los dibujos decorativos que la rodean.
   if (skull != null) {
     final double width = faceRect.width * 2.45;
     final double height = width * skull.height / skull.width;
@@ -58,10 +50,8 @@ void paintFaceFilters({
     );
   }
 
-  // Filtro 2: gorro de Santa.
-  // Mantiene el tamaño y la posición ajustados anteriormente.
   if (santaHat != null) {
-    final double width = faceRect.width * 1.9;
+    final double width = faceRect.width * santaHatScale;
     final double height = width * santaHat.height / santaHat.width;
 
     _drawRotatedOverlay(
@@ -69,7 +59,7 @@ void paintFaceFilters({
       image: santaHat,
       center: Offset(
         faceRect.center.dx - faceRect.width * 0.12,
-        faceRect.top - height * 0.32,
+        faceRect.top - height * 0.08,
       ),
       width: width,
       height: height,
@@ -78,7 +68,6 @@ void paintFaceFilters({
   }
 }
 
-/// Dibuja una imagen centrada, escalada y rotada.
 void _drawRotatedOverlay({
   required Canvas canvas,
   required ui.Image image,
@@ -117,19 +106,16 @@ void _drawRotatedOverlay({
   canvas.restore();
 }
 
-/// Combina la foto original y los filtros en una imagen PNG real.
-///
-/// El resultado contiene los filtros dentro de los píxeles de la imagen.
 Future<Uint8List> composeFilteredImageBytes({
   required ui.Image originalImage,
   required List<Face> faces,
   required ui.Image? skull,
   required ui.Image? santaHat,
+  double santaHatScale = 1.9,
 }) async {
   final ui.PictureRecorder recorder = ui.PictureRecorder();
   final Canvas canvas = Canvas(recorder);
 
-  // Conserva la resolución original de la foto.
   final Rect imageRect = Rect.fromLTWH(
     0,
     0,
@@ -144,18 +130,17 @@ Future<Uint8List> composeFilteredImageBytes({
     Paint()..filterQuality = FilterQuality.high,
   );
 
-  // Incorpora los filtros en cada rostro detectado.
   for (final Face face in faces) {
     paintFaceFilters(
       canvas: canvas,
       face: face,
       skull: skull,
       santaHat: santaHat,
+      santaHatScale: santaHatScale,
     );
   }
 
   final ui.Picture picture = recorder.endRecording();
-
   final ui.Image result = await picture.toImage(
     originalImage.width,
     originalImage.height,

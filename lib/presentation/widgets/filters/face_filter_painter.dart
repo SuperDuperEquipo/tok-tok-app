@@ -28,13 +28,15 @@ void paintFaceFilters({
   required Face face,
   required ui.Image? skull,
   required ui.Image? santaHat,
+  double skullScale = 2.45,
   double santaHatScale = 1.9,
 }) {
   final Rect faceRect = face.boundingBox;
-  final double angle = (face.headEulerAngleZ ?? 0) * math.pi / 180;
+  final double angle =
+      (face.headEulerAngleZ ?? 0) * math.pi / 180;
 
   if (skull != null) {
-    final double width = faceRect.width * 2.45;
+    final double width = faceRect.width * skullScale;
     final double height = width * skull.height / skull.width;
 
     _drawRotatedOverlay(
@@ -111,6 +113,7 @@ Future<Uint8List> composeFilteredImageBytes({
   required List<Face> faces,
   required ui.Image? skull,
   required ui.Image? santaHat,
+  double skullScale = 2.45,
   double santaHatScale = 1.9,
 }) async {
   final ui.PictureRecorder recorder = ui.PictureRecorder();
@@ -136,11 +139,13 @@ Future<Uint8List> composeFilteredImageBytes({
       face: face,
       skull: skull,
       santaHat: santaHat,
+      skullScale: skullScale,
       santaHatScale: santaHatScale,
     );
   }
 
   final ui.Picture picture = recorder.endRecording();
+
   final ui.Image result = await picture.toImage(
     originalImage.width,
     originalImage.height,

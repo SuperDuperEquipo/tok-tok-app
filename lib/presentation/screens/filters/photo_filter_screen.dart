@@ -21,6 +21,7 @@ class PhotoFilterScreen extends StatefulWidget {
 }
 
 class _PhotoFilterScreenState extends State<PhotoFilterScreen> {
+  static const double _photoSkullScale = 3.3;
   static const double _photoSantaHatScale = 2.185;
 
   final FaceDetector _faceDetector = FaceDetector(
@@ -131,6 +132,7 @@ class _PhotoFilterScreenState extends State<PhotoFilterScreen> {
         faces: _faces,
         skull: _showSkull ? _skullImage : null,
         santaHat: _showSantaHat ? _santaHatImage : null,
+        skullScale: _photoSkullScale,
         santaHatScale: _photoSantaHatScale,
       );
 
@@ -221,6 +223,7 @@ class _PhotoFilterScreenState extends State<PhotoFilterScreen> {
                     faces: _faces,
                     skull: _showSkull ? _skullImage : null,
                     santaHat: _showSantaHat ? _santaHatImage : null,
+                    skullScale: _photoSkullScale,
                     santaHatScale: _photoSantaHatScale,
                   ),
                   child: const SizedBox.expand(),
@@ -287,6 +290,7 @@ class _PhotoFilterPainter extends CustomPainter {
   final List<Face> faces;
   final ui.Image? skull;
   final ui.Image? santaHat;
+  final double skullScale;
   final double santaHatScale;
 
   _PhotoFilterPainter({
@@ -294,6 +298,7 @@ class _PhotoFilterPainter extends CustomPainter {
     required this.faces,
     required this.skull,
     required this.santaHat,
+    required this.skullScale,
     required this.santaHatScale,
   });
 
@@ -325,6 +330,7 @@ class _PhotoFilterPainter extends CustomPainter {
         face: face,
         skull: skull,
         santaHat: santaHat,
+        skullScale: skullScale,
         santaHatScale: santaHatScale,
       );
     }
@@ -338,6 +344,7 @@ class _PhotoFilterPainter extends CustomPainter {
         oldDelegate.skull != skull ||
         oldDelegate.santaHat != santaHat ||
         oldDelegate.faces != faces ||
+        oldDelegate.skullScale != skullScale ||
         oldDelegate.santaHatScale != santaHatScale;
   }
 }

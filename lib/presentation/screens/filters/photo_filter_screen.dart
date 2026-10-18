@@ -21,6 +21,8 @@ class PhotoFilterScreen extends StatefulWidget {
 }
 
 class _PhotoFilterScreenState extends State<PhotoFilterScreen> {
+  static const double _photoSantaHatScale = 2.185;
+
   final FaceDetector _faceDetector = FaceDetector(
     options: FaceDetectorOptions(
       performanceMode: FaceDetectorMode.accurate,
@@ -47,33 +49,24 @@ class _PhotoFilterScreenState extends State<PhotoFilterScreen> {
   }
 
   Future<void> _loadPhotoAndDetectFaces() async {
+    ui.Image? skull;
+    ui.Image? santaHat;
+    ui.Image? photoImage;
+
     try {
-      // Carga los dos filtros PNG.
-      final skull = await loadFilterAsset(
-        'assets/filtros/filtro1.png',
-      );
+      skull = await loadFilterAsset('assets/filtros/filtro1.png');
+      santaHat = await loadFilterAsset('assets/filtros/filtro2.png');
 
-      final santaHat = await loadFilterAsset(
-        'assets/filtros/filtro2.png',
-      );
-
-      // Lee la foto que se recibió desde la pantalla anterior.
       final File photoFile = File(widget.imagePath);
       final Uint8List photoBytes = await photoFile.readAsBytes();
 
-      final ui.Codec codec = await ui.instantiateImageCodec(
-        photoBytes,
-      );
-
+      final ui.Codec codec = await ui.instantiateImageCodec(photoBytes);
       final ui.FrameInfo frame = await codec.getNextFrame();
-      final ui.Image photoImage = frame.image;
-
+      photoImage = frame.image;
       codec.dispose();
 
-      // Detecta los rostros de la foto original.
-      final InputImage inputImage = InputImage.fromFilePath(
-        widget.imagePath,
-      );
+      final InputImage inputImage =
+          InputImage.fromFilePath(widget.imagePath);
 
       final List<Face> detectedFaces =
           await _faceDetector.processImage(inputImage);
@@ -98,6 +91,10 @@ class _PhotoFilterScreenState extends State<PhotoFilterScreen> {
         }
       });
     } catch (error) {
+      photoImage?.dispose();
+      skull?.dispose();
+      santaHat?.dispose();
+
       if (!mounted) return;
 
       setState(() {
@@ -113,7 +110,7 @@ class _PhotoFilterScreenState extends State<PhotoFilterScreen> {
   Future<void> _useFilteredPhoto() async {
     if (_originalImage == null) return;
 
-    if (_showSkull && _showSantaHat && _faces.isEmpty) {
+    if ((_showSkull || _showSantaHat) && _faces.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
@@ -129,20 +126,19 @@ class _PhotoFilterScreenState extends State<PhotoFilterScreen> {
     });
 
     try {
-      // Genera una imagen nueva con los filtros incorporados.
-      final Uint8List filteredBytes =
-          await composeFilteredImageBytes(
+      final Uint8List filteredBytes = await composeFilteredImageBytes(
         originalImage: _originalImage!,
         faces: _faces,
         skull: _showSkull ? _skullImage : null,
         santaHat: _showSantaHat ? _santaHatImage : null,
+        santaHatScale: _photoSantaHatScale,
       );
 
-      // Guarda temporalmente el resultado dentro de la app.
       final String outputPath =
           '${Directory.systemTemp.path}'
           '${Platform.pathSeparator}'
-          'toktok_filtered_${DateTime.now().microsecondsSinceEpoch}.png';
+          'toktok_filtered_'
+          '${DateTime.now().microsecondsSinceEpoch}.png';
 
       final File outputFile = File(outputPath);
 
@@ -153,7 +149,6 @@ class _PhotoFilterScreenState extends State<PhotoFilterScreen> {
 
       if (!mounted) return;
 
-      // Devuelve la ruta a la pantalla que abrió este filtro.
       Navigator.pop(context, outputFile.path);
     } catch (error) {
       if (!mounted) return;
@@ -177,11 +172,9 @@ class _PhotoFilterScreenState extends State<PhotoFilterScreen> {
   @override
   void dispose() {
     _faceDetector.close();
-
     _originalImage?.dispose();
     _skullImage?.dispose();
     _santaHatImage?.dispose();
-
     super.dispose();
   }
 
@@ -227,8 +220,8 @@ class _PhotoFilterScreenState extends State<PhotoFilterScreen> {
                     originalImage: _originalImage!,
                     faces: _faces,
                     skull: _showSkull ? _skullImage : null,
-                    santaHat:
-                        _showSantaHat ? _santaHatImage : null,
+                    santaHat: _showSantaHat ? _santaHatImage : null,
+                    santaHatScale: _photoSantaHatScale,
                   ),
                   child: const SizedBox.expand(),
                 ),
@@ -236,7 +229,6 @@ class _PhotoFilterScreenState extends State<PhotoFilterScreen> {
             ),
           ),
         ),
-
         if (_errorMessage != null)
           Padding(
             padding: const EdgeInsets.all(12),
@@ -248,37 +240,36 @@ class _PhotoFilterScreenState extends State<PhotoFilterScreen> {
               ),
             ),
           ),
-
         SwitchListTile(
           title: const Text('Calavera de Halloween'),
           subtitle: const Text('Mostrar el filtro de calavera'),
           value: _showSkull,
-          onChanged: (value) {
-            setState(() {
-              _showSkull = value;
-            });
-          },
+          onChanged: _isGenerating
+              ? null
+              : (value) {
+                  setState(() {
+                    _showSkull = value;
+                  });
+                },
         ),
-
         SwitchListTile(
           title: const Text('Gorro de Santa'),
           subtitle: const Text('Mostrar el gorro navideño'),
           value: _showSantaHat,
-          onChanged: (value) {
-            setState(() {
-              _showSantaHat = value;
-            });
-          },
+          onChanged: _isGenerating
+              ? null
+              : (value) {
+                  setState(() {
+                    _showSantaHat = value;
+                  });
+                },
         ),
-
         Padding(
           padding: const EdgeInsets.all(16),
           child: SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: _isGenerating
-                  ? null
-                  : _useFilteredPhoto,
+              onPressed: _isGenerating ? null : _useFilteredPhoto,
               child: _isGenerating
                   ? const CircularProgressIndicator()
                   : const Text('Usar foto'),
@@ -296,12 +287,14 @@ class _PhotoFilterPainter extends CustomPainter {
   final List<Face> faces;
   final ui.Image? skull;
   final ui.Image? santaHat;
+  final double santaHatScale;
 
   _PhotoFilterPainter({
     required this.originalImage,
     required this.faces,
     required this.skull,
     required this.santaHat,
+    required this.santaHatScale,
   });
 
   @override
@@ -332,6 +325,7 @@ class _PhotoFilterPainter extends CustomPainter {
         face: face,
         skull: skull,
         santaHat: santaHat,
+        santaHatScale: santaHatScale,
       );
     }
 
@@ -343,6 +337,7 @@ class _PhotoFilterPainter extends CustomPainter {
     return oldDelegate.originalImage != originalImage ||
         oldDelegate.skull != skull ||
         oldDelegate.santaHat != santaHat ||
-        oldDelegate.faces != faces;
+        oldDelegate.faces != faces ||
+        oldDelegate.santaHatScale != santaHatScale;
   }
 }

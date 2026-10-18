@@ -11,9 +11,10 @@ import 'package:toktok/presentation/widgets/auth/auth_background.dart';
 import 'package:toktok/presentation/widgets/auth/gradient_button.dart';
 import 'package:video_player/video_player.dart';
 
+import '../camera/live_filter_screen.dart';
 import '../filters/photo_filter_screen.dart';
 
-enum _Source { gallery, photo, video }
+enum _Source { gallery, photo, video, cameraFilters }
 
 class UploadScreen extends StatefulWidget {
   const UploadScreen({super.key});
@@ -78,20 +79,23 @@ class _UploadScreenState extends State<UploadScreen> {
             _SourceTile(
               icon: Icons.photo_library_outlined,
               label: 'Elegir de la galería',
-              onTap: () =>
-                  Navigator.pop(sheetContext, _Source.gallery),
+              onTap: () => Navigator.pop(sheetContext, _Source.gallery),
             ),
             _SourceTile(
               icon: Icons.photo_camera_outlined,
               label: 'Tomar una foto',
-              onTap: () =>
-                  Navigator.pop(sheetContext, _Source.photo),
+              onTap: () => Navigator.pop(sheetContext, _Source.photo),
             ),
             _SourceTile(
               icon: Icons.videocam_outlined,
               label: 'Grabar un video',
+              onTap: () => Navigator.pop(sheetContext, _Source.video),
+            ),
+            _SourceTile(
+              icon: Icons.face_retouching_natural,
+              label: 'Abrir cámara con filtros',
               onTap: () =>
-                  Navigator.pop(sheetContext, _Source.video),
+                  Navigator.pop(sheetContext, _Source.cameraFilters),
             ),
             const SizedBox(height: 8),
           ],
@@ -99,12 +103,23 @@ class _UploadScreenState extends State<UploadScreen> {
       ),
     );
 
-    if (source != null) {
+    if (source != null && mounted) {
       await _pick(source);
     }
   }
 
   Future<void> _pick(_Source source) async {
+    // Abre la pantalla de cámara con filtros en vivo.
+    if (source == _Source.cameraFilters) {
+      await Navigator.push<void>(
+        context,
+        MaterialPageRoute<void>(
+          builder: (_) => const LiveFilterScreen(),
+        ),
+      );
+      return;
+    }
+
     XFile? picked;
 
     try {
@@ -130,6 +145,9 @@ class _UploadScreenState extends State<UploadScreen> {
             maxDuration: const Duration(seconds: 60),
           );
           break;
+
+        case _Source.cameraFilters:
+          return;
       }
     } catch (error) {
       debugPrint('Error al seleccionar archivo: $error');
@@ -221,7 +239,7 @@ class _UploadScreenState extends State<UploadScreen> {
 
     final String? filteredPath = await Navigator.push<String>(
       context,
-      MaterialPageRoute(
+      MaterialPageRoute<String>(
         builder: (_) => PhotoFilterScreen(
           imagePath: file.path,
         ),
@@ -230,7 +248,6 @@ class _UploadScreenState extends State<UploadScreen> {
 
     if (!mounted || filteredPath == null) return;
 
-    // Comprueba que el archivo generado exista antes de usarlo.
     final filteredFile = File(filteredPath);
 
     if (!await filteredFile.exists()) {
@@ -238,13 +255,11 @@ class _UploadScreenState extends State<UploadScreen> {
       return;
     }
 
-    // Reemplaza la selección actual por el PNG filtrado.
     setState(() {
       _file = XFile(
         filteredPath,
         mimeType: 'image/png',
       );
-
       _isVideo = false;
       _uploadedUrl = null;
       _progress = 0;
@@ -448,7 +463,6 @@ class _UploadScreenState extends State<UploadScreen> {
                         _buildPreview(context),
                         const SizedBox(height: 12),
 
-                        // Permite abrir los filtros para las fotos.
                         if (_file != null && !_isVideo)
                           OutlinedButton.icon(
                             onPressed:
@@ -518,7 +532,6 @@ class _UploadScreenState extends State<UploadScreen> {
   }
 }
 
-// Opción individual del menú para seleccionar el origen del archivo.
 class _SourceTile extends StatelessWidget {
   final IconData icon;
   final String label;

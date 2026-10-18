@@ -1,6 +1,5 @@
-
 import 'dart:io';
-
+import 'package:gal/gal.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -94,8 +93,7 @@ class _UploadScreenState extends State<UploadScreen> {
             _SourceTile(
               icon: Icons.face_retouching_natural,
               label: 'Abrir cámara con filtros',
-              onTap: () =>
-                  Navigator.pop(sheetContext, _Source.cameraFilters),
+              onTap: () => Navigator.pop(sheetContext, _Source.cameraFilters),
             ),
             const SizedBox(height: 8),
           ],
@@ -113,9 +111,7 @@ class _UploadScreenState extends State<UploadScreen> {
     if (source == _Source.cameraFilters) {
       await Navigator.push<void>(
         context,
-        MaterialPageRoute<void>(
-          builder: (_) => const LiveFilterScreen(),
-        ),
+        MaterialPageRoute<void>(builder: (_) => const LiveFilterScreen()),
       );
       return;
     }
@@ -125,10 +121,7 @@ class _UploadScreenState extends State<UploadScreen> {
     try {
       switch (source) {
         case _Source.gallery:
-          picked = await _picker.pickMedia(
-            imageQuality: 85,
-            maxWidth: 1920,
-          );
+          picked = await _picker.pickMedia(imageQuality: 85, maxWidth: 1920);
           break;
 
         case _Source.photo:
@@ -159,7 +152,8 @@ class _UploadScreenState extends State<UploadScreen> {
 
     if (picked == null) return;
 
-    final bool isVideo = source == _Source.video ||
+    final bool isVideo =
+        source == _Source.video ||
         (source == _Source.gallery && _looksLikeVideo(picked));
 
     VideoPlayerController? controller;
@@ -216,9 +210,7 @@ class _UploadScreenState extends State<UploadScreen> {
 
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(content: Text(message)),
-      );
+      ..showSnackBar(SnackBar(content: Text(message)));
   }
 
   void _fail(String message) {
@@ -240,9 +232,7 @@ class _UploadScreenState extends State<UploadScreen> {
     final String? filteredPath = await Navigator.push<String>(
       context,
       MaterialPageRoute<String>(
-        builder: (_) => PhotoFilterScreen(
-          imagePath: file.path,
-        ),
+        builder: (_) => PhotoFilterScreen(imagePath: file.path),
       ),
     );
 
@@ -256,16 +246,40 @@ class _UploadScreenState extends State<UploadScreen> {
     }
 
     setState(() {
-      _file = XFile(
-        filteredPath,
-        mimeType: 'image/png',
-      );
+      _file = XFile(filteredPath, mimeType: 'image/png');
       _isVideo = false;
       _uploadedUrl = null;
       _progress = 0;
     });
 
     _showMessage('Foto actualizada con los filtros.');
+  }
+
+  Future<void> _downloadToGallery() async {
+    final file = _file;
+    if (file == null || _uploading) return;
+
+    setState(() => _uploading = true);
+
+    try {
+      final hasAccess = await Gal.hasAccess();
+      if (!hasAccess) {
+        await Gal.requestAccess();
+      }
+
+      if (_isVideo) {
+        await Gal.putVideo(file.path);
+      } else {
+        await Gal.putImage(file.path);
+      }
+
+      _showMessage('¡Guardado en la galería con éxito!');
+    } catch (e) {
+      debugPrint('Error al guardar: $e');
+      _showMessage('No se pudo guardar en la galería.');
+    } finally {
+      if (mounted) setState(() => _uploading = false);
+    }
   }
 
   // Muestra la vista previa de la foto o el video seleccionado.
@@ -277,9 +291,7 @@ class _UploadScreenState extends State<UploadScreen> {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: AppColors.border,
-        ),
+        border: Border.all(color: AppColors.border),
       ),
       child: _file == null
           ? InkWell(
@@ -287,10 +299,7 @@ class _UploadScreenState extends State<UploadScreen> {
               child: const Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    Icons.add_photo_alternate_outlined,
-                    size: 56,
-                  ),
+                  Icon(Icons.add_photo_alternate_outlined, size: 56),
                   SizedBox(height: 12),
                   Text('Selecciona una foto o un video'),
                   SizedBox(height: 8),
@@ -331,9 +340,7 @@ class _UploadScreenState extends State<UploadScreen> {
     final video = _video;
 
     if (video == null || !video.value.isInitialized) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
+      return const Center(child: CircularProgressIndicator());
     }
 
     return Stack(
@@ -402,11 +409,7 @@ class _UploadScreenState extends State<UploadScreen> {
 
       messenger
         ..hideCurrentSnackBar()
-        ..showSnackBar(
-          const SnackBar(
-            content: Text('Publicación creada'),
-          ),
-        );
+        ..showSnackBar(const SnackBar(content: Text('Publicación creada')));
 
       navigator.pop();
     } on CloudinaryException catch (error) {
@@ -434,9 +437,7 @@ class _UploadScreenState extends State<UploadScreen> {
           centerTitle: true,
           title: const Text(
             'Nueva publicación',
-            style: TextStyle(
-              fontWeight: FontWeight.w800,
-            ),
+            style: TextStyle(fontWeight: FontWeight.w800),
           ),
         ),
         body: Stack(
@@ -454,9 +455,7 @@ class _UploadScreenState extends State<UploadScreen> {
                     24,
                   ),
                   child: ConstrainedBox(
-                    constraints: const BoxConstraints(
-                      maxWidth: 480,
-                    ),
+                    constraints: const BoxConstraints(maxWidth: 480),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
@@ -465,11 +464,8 @@ class _UploadScreenState extends State<UploadScreen> {
 
                         if (_file != null && !_isVideo)
                           OutlinedButton.icon(
-                            onPressed:
-                                _uploading ? null : _testPhotoFilters,
-                            icon: const Icon(
-                              Icons.face_retouching_natural,
-                            ),
+                            onPressed: _uploading ? null : _testPhotoFilters,
+                            icon: const Icon(Icons.face_retouching_natural),
                             label: const Text('Probar filtros'),
                           ),
 
@@ -481,8 +477,7 @@ class _UploadScreenState extends State<UploadScreen> {
                           maxLength: 150,
                           minLines: 1,
                           maxLines: 3,
-                          textCapitalization:
-                              TextCapitalization.sentences,
+                          textCapitalization: TextCapitalization.sentences,
                           decoration: const InputDecoration(
                             hintText: 'Escribe una descripción...',
                           ),
@@ -513,6 +508,17 @@ class _UploadScreenState extends State<UploadScreen> {
                           ),
                           const SizedBox(height: 16),
                         ],
+
+                        if (_file != null)
+                          OutlinedButton.icon(
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                            ),
+                            onPressed: _uploading ? null : _downloadToGallery,
+                            icon: const Icon(Icons.download_rounded),
+                            label: const Text('Guardar en Galería'),
+                          ),
+                        const SizedBox(height: 12),
 
                         GradientButton(
                           label: 'Publicar',
@@ -545,10 +551,6 @@ class _SourceTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      leading: Icon(icon),
-      title: Text(label),
-      onTap: onTap,
-    );
+    return ListTile(leading: Icon(icon), title: Text(label), onTap: onTap);
   }
 }
